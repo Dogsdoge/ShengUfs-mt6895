@@ -2,8 +2,9 @@
 
 MT6895 UFS block driver for UniXNU iOS 16, built by composing three proven layers.
 
-> Status: SKELETON STAGE. Extent layer is host-tested; controller core is from a
-> device-verified HakiOS port; IOMedia publication layer is referenced from upstream.
+> Status: 3-LAYER SKELETON COMPLETE. All three layers have code in this repo:
+> L1 controller (HakiOS, device-verified), L2 extent mapping (host-tested),
+> L3 IOMedia glue (Mt6895UfsBlock.cpp, design skeleton).
 > No kernel build or device flashing has been done yet.
 
 ## Architecture (3-layer composition)
@@ -43,6 +44,7 @@ MT6895 UFS block driver for UniXNU iOS 16, built by composing three proven layer
 | `UfsHc.c` / `UfsHc.h` | Layer 1: UFS controller core | From HakiOS (MT6895 verified), unmodified |
 | `UfsExtents.c` / `UfsExtents.h` | Layer 2: extent mapping | New, host-tested via `test_extents.c` |
 | `test_extents.c` | Host self-test for extent logic | ALL TESTS PASS |
+| `Mt6895UfsBlock.cpp` | Layer 3: IOBlockStorageDevice with extent-mapped read | Design skeleton |
 | `reference/RootLayout.h` | UniXNU manifest parser (for layer 3) | Upstream reference |
 | `reference/RootWindowRead.h` | UniXNU window reader (for layer 3) | Upstream reference |
 
