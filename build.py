@@ -80,7 +80,7 @@ if _private.is_dir():
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     objs = []
-    c_sources = ['UfsHc.c', 'UfsExtents.c']
+    c_sources = ['UfsHc.c', 'UfsExtents.c', 'ufs-compat-stubs.c']
     # Layer 3 (IOMedia/IOService glue) is a DESIGN SKELETON: it references
     # IOKit APIs (IOMalloc/IOFree/IOLog) and ufs_read_blocks that need the full
     # kernel/IOKit environment. Keep it in the repo for future integration,
