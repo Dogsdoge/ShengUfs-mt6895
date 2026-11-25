@@ -64,7 +64,7 @@
 #include <vm/vm_kern.h>
 #include <vm/memory_types.h>
 #include "ufs-xnu-compat.h"   /* standalone-archive shims for XNU-only APIs */
-#include "redwood_ufshc.h"
+#include "UfsHc.h"
 
 extern vm_offset_t ml_io_map(vm_offset_t phys_addr, vm_size_t size);
 extern vm_offset_t ml_io_map_unmappable(vm_offset_t phys_addr, vm_size_t size, unsigned int flags);

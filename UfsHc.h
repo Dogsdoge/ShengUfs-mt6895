@@ -1,8 +1,8 @@
 /*
  * The kernel's own UFS driver (redwood_ufshc.c), as redwood_ufs.c uses it.
  */
-#ifndef _REDWOOD_UFSHC_H_
-#define _REDWOOD_UFSHC_H_
+#ifndef _SHENGUFS_UFSHC_H_
+#define _SHENGUFS_UFSHC_H_
 
 #include <stdbool.h>
 #include <stdint.h>
