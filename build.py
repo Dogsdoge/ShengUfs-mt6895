@@ -61,7 +61,10 @@ CC = _find_tool('CC')
 AR = _find_tool('AR')
 
 # `-arch` is Apple-clang only; Linux clang selects the target via --target.
-CFLAGS = ['-target', 'arm64-apple-darwin', '-fno-builtin',
+# Match the framework's kernel target (kernel_target.py): arm64-apple-ios<ver>.
+# Using apple-darwin stamps the object as macOS and the iOS kernel link rejects it.
+IOS_VER = os.environ.get('UNIXNU_IOS_VERSION', '16.5')
+CFLAGS = ['-target', f'arm64-apple-ios{IOS_VER}', '-fno-builtin',
           '-ffreestanding', '-O2', '-Wall', '-Wno-unused-variable',
           '-DKERNEL', '-DXNU_KERNEL_PRIVATE']
 
