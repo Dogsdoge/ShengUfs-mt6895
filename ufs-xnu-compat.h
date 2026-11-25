@@ -22,8 +22,10 @@
 typedef volatile int ufs_compat_lock_t;
 typedef struct { int unused; } ufs_compat_lck_grp_t;
 
-#define LCK_GRP_DECLARE(name, desc) static ufs_compat_lck_grp_t name
-#define LCK_MTX_DECLARE(name, grp)  static ufs_compat_lock_t name = 0
+/* The caller writes `static LCK_MTX_DECLARE(...)`, so the macro itself must
+ * not add another `static` (matches the real XNU macro convention). */
+#define LCK_GRP_DECLARE(name, desc) ufs_compat_lck_grp_t name
+#define LCK_MTX_DECLARE(name, grp)  ufs_compat_lock_t name = 0
 
 static inline void ufs_compat_lock(volatile int *l) {
     while (__sync_lock_test_and_set(l, 1)) { while (*l) { } }
@@ -37,10 +39,9 @@ static inline void ufs_compat_unlock(volatile int *l) { __sync_lock_release(l); 
 #define SYSCTL_QUAD(...) /* no sysctl tree in archive */
 
 /* ---- clocks / MMU / sleep ----
- * UfsHc.c already declares ml_*/IOSleep/mach_* externs itself; the trimmed
- * kernel headers provide mach_absolute_time/absolutetime_to_nanoseconds.
- * Only the lock and sysctl macros above are missing. Keep this header minimal
- * to avoid duplicate/conflicting declarations.
+ * UfsHc.c declares its own MMU/IOSleep externs, and the trimmed kernel headers
+ * provide the mach clock functions. Only the lock and sysctl macros above are
+ * missing. Keep this header minimal to avoid conflicting declarations.
  */
 
 #endif /* _UFS_XNU_COMPAT_H_ */
