@@ -38,11 +38,18 @@ static inline void ufs_compat_unlock(volatile int *l) { __sync_lock_release(l); 
 #define SYSCTL_DECL(parent)
 #define SYSCTL_QUAD(...) /* no sysctl tree in archive */
 
-/* ---- kernel memory allocation constants (stable XNU ABI values) ----
- * kmem_alloc_contig() is declared by the trimmed headers; only its argument
- * constants are missing. kernel_map is resolved at final link by the kernel.
+/* ---- kernel memory allocation (stable XNU ABI) ----
+ * These functions/constants aren't in the trimmed headers. The functions are
+ * resolved at final link by the kernel; only declarations are needed here.
  */
-extern void *kernel_map;                  /* vm_map_t kernel_map */
+typedef void *vm_map_t;
+extern vm_map_t kernel_map;
+extern void *kalloc_data(unsigned int size, unsigned int flags);
+extern void kfree_data(void *data, unsigned int size);
+extern int kmem_alloc_contig(vm_map_t map, void **addr, unsigned long size,
+                             unsigned long mask, unsigned long low, unsigned long high,
+                             unsigned int flags, unsigned int tag);
+#define Z_WAITOK       0x00000008u
 #define KMA_KOBJECT    0x00000008u
 #define KMA_ZERO       0x00000020u
 #define KMA_DATA       0x00000100u
