@@ -53,8 +53,8 @@ def _find_tool(name):
 CC = _find_tool('CC')
 AR = _find_tool('AR')
 
-ARCH = '-arch arm64'
-CFLAGS = [ARCH, '-target', 'arm64-apple-darwin', '-fno-builtin',
+# `-arch` is Apple-clang only; Linux clang selects the target via --target.
+CFLAGS = ['-target', 'arm64-apple-darwin', '-fno-builtin',
           '-ffreestanding', '-O2', '-Wall', '-Wno-unused-variable']
 
 def main():
