@@ -28,7 +28,12 @@ if not (_default_component / 'UfsHc.c').is_file():
     _default_component = _here  # fallback: run from the component repo itself
 COMPONENT = Path(os.environ.get('COMPONENT_DIR', str(_default_component)))
 OUT = Path(os.environ.get('ARCHIVE_OUT', 'build/ShengUfsMt6895'))
-XNU_INC = Path(os.environ.get('XNU_INCLUDE', ''))
+# The framework does not export XNU_INCLUDE. The real kernel headers (with
+# kern/clock.h etc.) live in the assembled fakeroot Kernel.framework; the
+# storage-abi tree is only IOKit glue. Default to the framework Headers and
+# let the compile step add PrivateHeaders too.
+XNU_INC = Path(os.environ.get('XNU_INCLUDE', '') or
+               '.cache/fakeroot/System/Library/Frameworks/Kernel.framework/Versions/A/Headers')
 TOOLCHAIN = Path(os.environ.get('UNIXNU_TOOLCHAIN', '/opt/unixnu-linux'))
 
 def _find_tool(name):
@@ -57,6 +62,12 @@ AR = _find_tool('AR')
 CFLAGS = ['-target', 'arm64-apple-darwin', '-fno-builtin',
           '-ffreestanding', '-O2', '-Wall', '-Wno-unused-variable']
 
+# os/atomic_private.h and friends live in PrivateHeaders, a sibling of Headers.
+_private = XNU_INC.parent / 'PrivateHeaders'
+INCLUDES = ['-I', str(COMPONENT), '-I', str(XNU_INC)]
+if _private.is_dir():
+    INCLUDES += ['-I', str(_private)]
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     objs = []
@@ -68,8 +79,7 @@ def main():
         if not p.exists():
             print(f'missing {p}', file=sys.stderr); return 1
         obj = OUT / (Path(src).stem + '.o')
-        cmd = [CC] + CFLAGS + ['-I', str(COMPONENT), '-I', str(XNU_INC),
-                               '-c', str(p), '-o', str(obj)]
+        cmd = [CC] + CFLAGS + INCLUDES + ['-c', str(p), '-o', str(obj)]
         print(' '.join(cmd)); subprocess.run(cmd, check=True)
         objs.append(obj)
 
@@ -81,8 +91,7 @@ def main():
                   file=sys.stderr)
             continue
         obj = OUT / (Path(src).stem + '.o')
-        cmd = [CC] + CFLAGS + ['-std=c++17', '-I', str(COMPONENT),
-                               '-I', str(XNU_INC), '-c', str(p), '-o', str(obj)]
+        cmd = [CC] + CFLAGS + ['-std=c++17'] + INCLUDES + ['-c', str(p), '-o', str(obj)]
         print(' '.join(cmd)); subprocess.run(cmd, check=True)
         objs.append(obj)
 
