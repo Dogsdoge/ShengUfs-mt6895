@@ -18,19 +18,26 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-/* ---- locks: a tiny spinlock stands in for lck_mtx in the archive ---- */
-typedef volatile int ufs_compat_lock_t;
+/* ---- locks ----
+ * The trimmed headers do define lck_mtx_t (struct __lck_mtx_t__) and msleep,
+ * but not the LCK_*_DECLARE macros. Declare the real type so pointers passed
+ * to msleep()/lck_mtx_* type-check; implement the lock ops as a spinlock over
+ * the opaque struct's first word.
+ */
 typedef struct { int unused; } ufs_compat_lck_grp_t;
+typedef lck_mtx_t ufs_compat_lock_t;
 
-/* The caller writes `static LCK_MTX_DECLARE(...)`, so the macro itself must
- * not add another `static` (matches the real XNU macro convention). */
+/* Caller writes `static LCK_MTX_DECLARE(...)`; macro adds no `static`. */
 #define LCK_GRP_DECLARE(name, desc) ufs_compat_lck_grp_t name
-#define LCK_MTX_DECLARE(name, grp)  ufs_compat_lock_t name = 0
+#define LCK_MTX_DECLARE(name, grp)  ufs_compat_lock_t name
 
-static inline void ufs_compat_lock(volatile int *l) {
-    while (__sync_lock_test_and_set(l, 1)) { while (*l) { } }
+static inline void ufs_compat_lock(lck_mtx_t *l) {
+    volatile int *w = (volatile int *)l;
+    while (__sync_lock_test_and_set(w, 1)) { while (*w) { } }
 }
-static inline void ufs_compat_unlock(volatile int *l) { __sync_lock_release(l); }
+static inline void ufs_compat_unlock(lck_mtx_t *l) {
+    __sync_lock_release((volatile int *)l);
+}
 #define lck_mtx_lock(l)   ufs_compat_lock(l)
 #define lck_mtx_unlock(l) ufs_compat_unlock(l)
 
@@ -46,7 +53,7 @@ typedef void *vm_map_t;
 extern vm_map_t kernel_map;
 extern void *kalloc_data(unsigned int size, unsigned int flags);
 extern void kfree_data(void *data, unsigned int size);
-extern int kmem_alloc_contig(vm_map_t map, void **addr, unsigned long size,
+extern int kmem_alloc_contig(vm_map_t map, vm_offset_t *addr, unsigned long size,
                              unsigned long mask, unsigned long low, unsigned long high,
                              unsigned int flags, unsigned int tag);
 #define Z_WAITOK       0x00000008u
