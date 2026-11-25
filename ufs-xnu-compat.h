@@ -25,6 +25,11 @@
  * the opaque struct's first word.
  */
 typedef struct { int unused; } ufs_compat_lck_grp_t;
+
+/* The trimmed header forward-declares struct __lck_mtx_t__ but never defines
+ * it; a static instance needs a complete type. Define the same tag with one
+ * opaque word (the lock shim uses its first bytes). */
+struct __lck_mtx_t__ { int opaque; };
 typedef lck_mtx_t ufs_compat_lock_t;
 
 /* Caller writes `static LCK_MTX_DECLARE(...)`; macro adds no `static`. */
@@ -49,7 +54,8 @@ static inline void ufs_compat_unlock(lck_mtx_t *l) {
  * These functions/constants aren't in the trimmed headers. The functions are
  * resolved at final link by the kernel; only declarations are needed here.
  */
-typedef void *vm_map_t;
+/* vm_map_t is defined by the trimmed kernel headers (mach_port_t-based);
+ * do not redefine it here — just declare the global. */
 extern vm_map_t kernel_map;
 extern void *kalloc_data(unsigned int size, unsigned int flags);
 extern void kfree_data(void *data, unsigned int size);
