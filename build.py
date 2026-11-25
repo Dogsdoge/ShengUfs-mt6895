@@ -76,7 +76,11 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     objs = []
     c_sources = ['UfsHc.c', 'UfsExtents.c']
-    cpp_sources = ['Mt6895UfsBlock.cpp']
+    # Layer 3 (IOMedia/IOService glue) is a DESIGN SKELETON: it references
+    # IOKit APIs (IOMalloc/IOFree/IOLog) and ufs_read_blocks that need the full
+    # kernel/IOKit environment. Keep it in the repo for future integration,
+    # but do not compile it into this standalone L1+L2 archive.
+    cpp_sources = []
 
     for src in c_sources:
         p = COMPONENT / src
