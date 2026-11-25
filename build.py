@@ -19,7 +19,14 @@ import subprocess
 import sys
 
 # Paths provided by the UniXNU build environment (override via env).
-COMPONENT = Path(os.environ.get('COMPONENT_DIR', '.'))
+# The framework runs this script from tree/scripts/, while the source lives in
+# tree/drivers/ShengUfsMt6895/. Derive the component dir from our own location
+# so `COMPONENT_DIR` is only an override, not a hard requirement.
+_here = Path(__file__).resolve().parent
+_default_component = _here.parent / 'drivers' / 'ShengUfsMt6895'
+if not (_default_component / 'UfsHc.c').is_file():
+    _default_component = _here  # fallback: run from the component repo itself
+COMPONENT = Path(os.environ.get('COMPONENT_DIR', str(_default_component)))
 OUT = Path(os.environ.get('ARCHIVE_OUT', 'build/ShengUfsMt6895'))
 XNU_INC = Path(os.environ.get('XNU_INCLUDE', ''))
 TOOLCHAIN = Path(os.environ.get('UNIXNU_TOOLCHAIN', '/opt/unixnu-linux'))
