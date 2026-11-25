@@ -38,6 +38,16 @@ static inline void ufs_compat_unlock(volatile int *l) { __sync_lock_release(l); 
 #define SYSCTL_DECL(parent)
 #define SYSCTL_QUAD(...) /* no sysctl tree in archive */
 
+/* ---- kernel memory allocation constants (stable XNU ABI values) ----
+ * kmem_alloc_contig() is declared by the trimmed headers; only its argument
+ * constants are missing. kernel_map is resolved at final link by the kernel.
+ */
+extern void *kernel_map;                  /* vm_map_t kernel_map */
+#define KMA_KOBJECT    0x00000008u
+#define KMA_ZERO       0x00000020u
+#define KMA_DATA       0x00000100u
+#define VM_KERN_MEMORY_IOKIT  10
+
 /* ---- clocks / MMU / sleep ----
  * UfsHc.c declares its own MMU/IOSleep externs, and the trimmed kernel headers
  * provide the mach clock functions. Only the lock and sysctl macros above are
