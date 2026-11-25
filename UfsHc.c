@@ -776,9 +776,9 @@ hc_complete(struct hc_slot *s, const char *what, bool tur)
 		lck_mtx_unlock(&hc_lock);
 	}
 	__asm__ volatile ("dsb sy" ::: "memory");
-	os_atomic_add(&hc_polls, polls, relaxed);
+	hc_polls += polls;
 	if (!tur) {
-		os_atomic_add(&hc_wait_us, hc_us_since(started), relaxed);
+		hc_wait_us += hc_us_since(started);
 	}
 	ocs = s->utrd[2] & 0xff;
 	if (ocs != OCS_SUCCESS || (r[0] & 0x3f) != UPIU_RESPONSE || r[3] != s->number || r[6] != 0 ||
@@ -788,7 +788,7 @@ hc_complete(struct hc_slot *s, const char *what, bool tur)
 		    "sense key %x asc %02x ascq %02x\n", s->number, what, ocs, r[0], r[3], r[6], r[7],
 		    r[34 + 2] & 0x0f, r[34 + 12], r[34 + 13]);
 		if (!tur) {
-			os_atomic_inc(&hc_errors, relaxed);
+			hc_errors++;
 		}
 		return EIO;
 	}
@@ -891,7 +891,7 @@ ufshc_read(uint8_t lun, uint64_t offset, uint8_t *dst, uint64_t len)
 				e = hc_ring(s);
 			}
 			if (e == 0 && hc_hang_after != 0 && hc_requests >= hc_hang_after &&
-			    os_atomic_cmpxchg(&hc_hanging, 0, 1, relaxed)) {
+			    __sync_bool_compare_and_swap(&hc_hanging, 0, 1)) {
 				hc_hang(s->number);
 			}
 			if (e != 0) {
@@ -920,8 +920,8 @@ ufshc_read(uint8_t lun, uint64_t offset, uint8_t *dst, uint64_t len)
 			r = hc_complete(e->slot, what, false);
 			if (r == 0) {
 				FlushPoC_DcacheRegion((vm_offset_t)e->slot->data, (size_t)e->blocks * BLOCK);
-				os_atomic_inc(&hc_requests, relaxed);
-				os_atomic_add(&hc_bytes, (uint64_t)e->blocks * BLOCK, relaxed);
+				hc_requests++;
+				hc_bytes += (uint64_t)e->blocks * BLOCK;
 				if (error == 0) {
 					memcpy(e->to, e->slot->data + e->skip, e->take);
 				}
@@ -997,8 +997,8 @@ ufshc_write(uint8_t lun, uint64_t offset, const uint8_t *src, uint64_t len)
 			error = hc_complete(s, what, false);
 		}
 		if (error == 0) {
-			os_atomic_inc(&hc_requests, relaxed);
-			os_atomic_add(&hc_bytes, (uint64_t)bytes, relaxed);
+			hc_requests++;
+			hc_bytes += (uint64_t)bytes;
 			hc_give(s);
 			s = NULL;
 			/* read back through the same driver, before the next block goes out */
