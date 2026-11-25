@@ -60,7 +60,8 @@ AR = _find_tool('AR')
 
 # `-arch` is Apple-clang only; Linux clang selects the target via --target.
 CFLAGS = ['-target', 'arm64-apple-darwin', '-fno-builtin',
-          '-ffreestanding', '-O2', '-Wall', '-Wno-unused-variable']
+          '-ffreestanding', '-O2', '-Wall', '-Wno-unused-variable',
+          '-DKERNEL', '-DXNU_KERNEL_PRIVATE']
 
 # Kernel.framework/Headers has kern/*.h but relies on TargetConditionals.h and
 # IOKit glue from the prepared storage-abi tree; os/atomic_private.h lives in
