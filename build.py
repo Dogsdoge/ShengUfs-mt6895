@@ -27,7 +27,9 @@ _default_component = _here.parent / 'drivers' / 'ShengUfsMt6895'
 if not (_default_component / 'UfsHc.c').is_file():
     _default_component = _here  # fallback: run from the component repo itself
 COMPONENT = Path(os.environ.get('COMPONENT_DIR', str(_default_component)))
-OUT = Path(os.environ.get('ARCHIVE_OUT', 'build/ShengUfsMt6895'))
+# build-xnu-4k-baseline.sh force-loads build/sheng-ufs/libShengUfs.a when
+# XNU_NATIVE_UFS=1 — emit exactly that path so the kernel link finds us.
+OUT = Path(os.environ.get('ARCHIVE_OUT', 'build/sheng-ufs'))
 # The framework does not export XNU_INCLUDE. The real kernel headers (with
 # kern/clock.h etc.) live in the assembled fakeroot Kernel.framework; the
 # storage-abi tree is only IOKit glue. Default to the framework Headers and
@@ -105,7 +107,7 @@ def main():
 
     if not objs:
         print('no objects built', file=sys.stderr); return 1
-    lib = OUT / 'libShengUfsMt6895.a'
+    lib = OUT / 'libShengUfs.a'
     subprocess.run([AR, 'rcs', str(lib)] + [str(o) for o in objs], check=True)
     print(f'archive: {lib} ({len(objs)} objects)')
     return 0
