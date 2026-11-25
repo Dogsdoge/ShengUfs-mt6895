@@ -34,13 +34,21 @@ TOOLCHAIN = Path(os.environ.get('UNIXNU_TOOLCHAIN', '/opt/unixnu-linux'))
 def _find_tool(name):
     # The Linux toolchain lays clang out in llvm/bin/, not the macOS-style
     # XcodeDefault.xctoolchain/usr/bin/. Probe both, then fall back to PATH.
-    if os.environ.get(name):
-        return os.environ[name]
+    import shutil
+    env_val = os.environ.get(name, '')
+    # Some callers set CC=VARNAME placeholders — only trust values that look
+    # like a real executable (a path or a bare command on PATH).
+    if env_val and (Path(env_val).is_file() or shutil.which(env_val)):
+        return env_val
     for rel in ('llvm/bin/' + name, 'XcodeDefault.xctoolchain/usr/bin/' + name):
         p = TOOLCHAIN / rel
         if p.is_file():
             return str(p)
-    return name
+    # `name` may be "CC"/"AR" (env-var names), not the binary name — always
+    # fall back to the actual binary so bash resolves it via PATH.
+    binary = 'clang' if name == 'CC' else 'ar' if name == 'AR' else name
+    found = shutil.which(binary)
+    return found if found else binary
 
 CC = _find_tool('CC')
 AR = _find_tool('AR')
