@@ -113,19 +113,8 @@ def main():
     lib = OUT / 'libShengUfs.a'
     subprocess.run([AR, 'rcs', str(lib)] + [str(o) for o in objs], check=True)
     print(f'archive: {lib} ({len(objs)} objects)')
-    # Also publish at the legacy path some component registrations still point
-    # to, so either consumer finds the archive regardless of which toml/CI
-    # revision is in play. Same bytes, hardlink where possible.
-    legacy_dir = OUT.parent / 'ShengUfsMt6895'
-    legacy = legacy_dir / 'libShengUfsMt6895.a'
-    legacy_dir.mkdir(parents=True, exist_ok=True)
-    if legacy != lib:
-        legacy.unlink(missing_ok=True)
-        try:
-            legacy.hardlink_to(lib)
-        except OSError:
-            import shutil
-            shutil.copyfile(lib, legacy)
+    # Do NOT duplicate the archive at a legacy path: build-xnu force-loads
+    # every matching .a, so two copies cause duplicate-symbol link failures.
     return 0
 
 if __name__ == '__main__':
