@@ -62,9 +62,12 @@ AR = _find_tool('AR')
 CFLAGS = ['-target', 'arm64-apple-darwin', '-fno-builtin',
           '-ffreestanding', '-O2', '-Wall', '-Wno-unused-variable']
 
-# os/atomic_private.h and friends live in PrivateHeaders, a sibling of Headers.
+# Kernel.framework/Headers has kern/*.h but relies on TargetConditionals.h and
+# IOKit glue from the prepared storage-abi tree; os/atomic_private.h lives in
+# PrivateHeaders. All three include roots are needed together.
 _private = XNU_INC.parent / 'PrivateHeaders'
-INCLUDES = ['-I', str(COMPONENT), '-I', str(XNU_INC)]
+INCLUDES = ['-I', str(COMPONENT), '-I', str(XNU_INC),
+            '-I', 'build/storage-abi/include']
 if _private.is_dir():
     INCLUDES += ['-I', str(_private)]
 
