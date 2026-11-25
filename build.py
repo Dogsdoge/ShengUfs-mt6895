@@ -30,8 +30,20 @@ COMPONENT = Path(os.environ.get('COMPONENT_DIR', str(_default_component)))
 OUT = Path(os.environ.get('ARCHIVE_OUT', 'build/ShengUfsMt6895'))
 XNU_INC = Path(os.environ.get('XNU_INCLUDE', ''))
 TOOLCHAIN = Path(os.environ.get('UNIXNU_TOOLCHAIN', '/opt/unixnu-linux'))
-CC = os.environ.get('CC', str(TOOLCHAIN / 'XcodeDefault.xctoolchain/usr/bin/clang'))
-AR = os.environ.get('AR', str(TOOLCHAIN / 'XcodeDefault.xctoolchain/usr/bin/ar'))
+
+def _find_tool(name):
+    # The Linux toolchain lays clang out in llvm/bin/, not the macOS-style
+    # XcodeDefault.xctoolchain/usr/bin/. Probe both, then fall back to PATH.
+    if os.environ.get(name):
+        return os.environ[name]
+    for rel in ('llvm/bin/' + name, 'XcodeDefault.xctoolchain/usr/bin/' + name):
+        p = TOOLCHAIN / rel
+        if p.is_file():
+            return str(p)
+    return name
+
+CC = _find_tool('CC')
+AR = _find_tool('AR')
 
 ARCH = '-arch arm64'
 CFLAGS = [ARCH, '-target', 'arm64-apple-darwin', '-fno-builtin',
